@@ -10,8 +10,8 @@ These scripts have been tested and verified on an OpenShift 4.20 cluster only!
 # Guide
 1. Clone the repo to your machine.
 2. Ensure you have an OpenShift 4.20 cluster (or above - but in this case you need to update the ODF version to match OCP version).
-3. Create an `users.httpd` file in the folder where you cloned this repo. If you create somewhere else, then make sure you update the `HTPASSWD_PATH` variable inside the setup.conf
-4. The `users.httpd` must contain a user that you will assign as cluster-admin. The script default expects this user to be `clusteradmin`. If you want a different user name, please update the `ADMIN_USER` in the setup.conf file.
+3. Create an `users.htpasswd` file in the folder where you cloned this repo. If you create somewhere else, then make sure you update the `HTPASSWD_PATH` variable inside the setup.conf
+4. The `users.htpasswd` must contain a user that you will assign as cluster-admin. The script default expects this user to be `clusteradmin`. If you want a different user name, please update the `ADMIN_USER` in the setup.conf file.
 5. Run setup-cluster.sh
 6. Run setup-maas.sh.
 
