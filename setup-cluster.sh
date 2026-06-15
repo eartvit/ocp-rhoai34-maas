@@ -261,7 +261,7 @@ wait_for_subscription_csv_succeeded() {
   while true; do
     local rc
     set +e
-    summary="$(
+    summary=$(
       NS="${ns}" SUB="${sub}" LABEL="${label}" REQUIRED_CSV="${required_csv}" python3 - <<'PYWAIT'
 import json
 import os
@@ -361,7 +361,7 @@ reason = csv_reason(ns, installed) if installed else ""
 print(f"WAIT|installedCSV|{ns}|{installed or 'none'}|{phase or 'unknown'}|{reason or 'none'}")
 sys.exit(1)
 PYWAIT
-    )"
+    )
     rc=$?
     set -e
 
