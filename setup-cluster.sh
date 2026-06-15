@@ -1040,6 +1040,40 @@ PY
   return "${rc}"
 }
 
+
+patch_worker_machineset_root_volume_size() {
+  local ms="$1"
+  local size_gb="${WORKER_MACHINESET_ROOT_VOLUME_SIZE_GB:-}"
+
+  if [[ -z "${size_gb}" || "${size_gb}" == "0" ]]; then
+    log "WORKER_MACHINESET_ROOT_VOLUME_SIZE_GB is empty/0; skipping worker MachineSet root volume patch for ${ms}."
+    return 0
+  fi
+
+  if ! [[ "${size_gb}" =~ ^[0-9]+$ ]]; then
+    die "WORKER_MACHINESET_ROOT_VOLUME_SIZE_GB must be a positive integer in GiB. Got: ${size_gb}"
+  fi
+
+  local current_size
+  current_size="$(
+    oc get machineset -n "${MACHINESET_NAMESPACE}" "${ms}"       -o jsonpath='{.spec.template.spec.providerSpec.value.blockDevices[0].ebs.volumeSize}' 2>/dev/null || true
+  )"
+
+  if [[ -z "${current_size}" ]]; then
+    die "Could not find AWS root volume path .spec.template.spec.providerSpec.value.blockDevices[0].ebs.volumeSize in MachineSet ${ms}. Refusing to patch an unknown providerSpec structure."
+  fi
+
+  if [[ "${current_size}" == "${size_gb}" ]]; then
+    log "Worker MachineSet ${ms} root volume already ${size_gb}Gi."
+    return 0
+  fi
+
+  log "Patching worker MachineSet ${ms} root volume ${current_size}Gi -> ${size_gb}Gi before scale-up."
+
+  oc patch machineset -n "${MACHINESET_NAMESPACE}" "${ms}" --type=json     -p="[{\"op\":\"replace\",\"path\":\"/spec/template/spec/providerSpec/value/blockDevices/0/ebs/volumeSize\",\"value\":${size_gb}}]"
+}
+
+
 scale_worker_machinesets() {
   if ! as_bool "${SCALE_WORKER_MACHINESETS:-true}"; then
     log "SCALE_WORKER_MACHINESETS=false; skipping."
@@ -1074,6 +1108,8 @@ scale_worker_machinesets() {
 
   while read -r ms; do
     [[ -z "${ms}" ]] && continue
+
+    patch_worker_machineset_root_volume_size "${ms}"
 
     if [[ -n "${preferred}" ]]; then
       local instance_type
